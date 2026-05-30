@@ -65,4 +65,3 @@ while True:
     # print(response)
     print(response.output_text)
     print()
-
