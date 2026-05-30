@@ -38,9 +38,11 @@ if prompt := st.chat_input():
     st.chat_message("user").write(prompt)
 
     # 대화 이력과 함께 LLM 질의 
-    response = client.chat.completions.create(model="gpt-5-nano", messages=st.session_state.messages)
+    #response = client.chat.completions.create(model="gpt-5-nano", messages=st.session_state.messages)
+    response = client.responses.create(model="gpt-5-nano", input=st.session_state.messages)
     
     # LLM 응답을 대화 이력에 추가하고, 화면에 출력
-    msg = response.choices[0].message.content
+    #msg = response.choices[0].message.content
+    msg = response.output_text
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
