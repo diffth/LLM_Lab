@@ -33,4 +33,3 @@ while True:
 print("\n대화 내용\n" + "-" * 50)
 for message in conversations:
     print(f"{message['role']:>9}: {message['content']}")
-
