@@ -67,7 +67,8 @@ if uploaded_file is not None:
 
     # 사용자 질의를 LLM에 전달해 답변 생성
     client = Client()
-    prompt = client.pull_prompt("rlm/rag-prompt")
+    #prompt = client.pull_prompt("rlm/rag-prompt")
+    prompt = client.pull_prompt("rlm/rag-prompt", dangerously_pull_public_prompt=True)
 
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
