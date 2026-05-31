@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_classic.memory import ConversationBufferWindowMemory
+from langchain_classic.memory import ConversationBufferSummaryMemory
 from langchain_core.prompts  import ChatPromptTemplate, MessagesPlaceholder
 
 load_dotenv()
 model = ChatOpenAI(model="gpt-4.1-nano")
 
-memory = ConversationBufferWindowMemory(k=2, return_messages=True)
+memory = ConversationBufferSummaryMemory(llm=model, return_messages=True)
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "사용자의 질문에 친절하게 답해줘."),
