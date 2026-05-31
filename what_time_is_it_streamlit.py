@@ -29,18 +29,42 @@ def get_ai_response(input_list, tools=None):
     return response
 
 
-# 대화 내용을 기록할 리스트
-input_list = []
+# 스트림릿 앱 설정
+st.title("함수 호출을 지원하는 챗봇")
 
-while True:
-    user_input = input("사용자: ")
-    if user_input.lower() == "exit":
-        break
+# (LLM 질의에 사용할) 대화 내용을 기록할 리스트를 초기화 
+if "input_list" not in st.session_state:
+    st.session_state.input_list = []
 
-    input_list.append({"role": "user", "content": user_input})
+# 화면 출력에 사용할 대화 내용을 기록할 리스트를 초기화
+# - 도구 호출과 관련된 내용을 포함하지 않음
+# - 사용자 질의와 LLM 최종 응답만 포함 
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    response = get_ai_response(input_list, tools=tools)
-    input_list += response.output
+# 대화 내용을 화면에 출력
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
+
+# while True:
+#     user_input = input("사용자: ")
+#     if user_input.lower() == "exit":
+#         break
+# 사용자 입력을 처리
+if user_input := st.chat_input():
+
+    # 사용자 입력을 화면에 출력하고 대화 내용에 추가
+    st.chat_message("user").write(user_input)
+    st.session_state.messages.append({
+        "role": "user", "content": user_input
+    })
+    st.session_state.input_list.append({
+        "role": "user", "content": user_input
+    })
+
+    # LLM 질의
+    response = get_ai_response(st.session_state.input_list, tools=tools)
+    st.session_state.input_list += response.output
 
     # 함수 호출이 있으면 함수 실행 후 결과를 질의에 추가 
     is_function_call = False
@@ -51,7 +75,7 @@ while True:
                 # 함수 호출에 필요한 인자값을 추출 
                 arguments = json.loads(item.arguments)
                 function_result = get_current_time(timezone=arguments.get("timezone"))
-                input_list.append({
+                st.session_state.input_list.append({
                     "type": "function_call_output",
                     "call_id": item.call_id, 
                     "output": function_result
@@ -59,10 +83,18 @@ while True:
 
     # 함수 호출이 있는 경우 함수 실행 결과를 모델에게 전달 
     if is_function_call:
-        response = get_ai_response(input_list)
-        input_list += response.output
+        response = get_ai_response(st.session_state.input_list)
+        st.session_state.input_list += response.output
 
     # 답변을 출력
     # print(response)
-    print(response.output_text)
-    print()
+    # print(response.output_text)
+    # print()
+
+    # LLM 최종 응답을 화면에 출력하고 대화 내용에 기록 
+    st.chat_message("assistant").write(response.output_text)
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": response.output_text
+    })
+
