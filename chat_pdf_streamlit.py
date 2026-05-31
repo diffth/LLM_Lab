@@ -58,27 +58,37 @@ if uploaded_file is not None:
     # Chroma DB에 저장
     db = Chroma.from_documents(documents=texts, embedding=embedding)
 
-    # 문서 검색기 생성
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    retriever = MultiQueryRetriever.from_llm(
-        llm=llm,
-        retriever=db.as_retriever(search_kwargs={"k": 3})
-    )
+    # 사용자 입력
+    st.header("PDF에게 질문해 보세요!!!")
+    question = st.text_input("질문을 입력하세요...")
 
-    # 사용자 질의를 LLM에 전달해 답변 생성
-    client = Client()
-    #prompt = client.pull_prompt("rlm/rag-prompt")
-    prompt = client.pull_prompt("rlm/rag-prompt", dangerously_pull_public_prompt=True)
+    if st.button("질문하기"):
+        with st.spinner("답변을 생성하는 중입니다..."):
+            # 아래쪽 모든 코드를 한 칸 들여쓰기    
 
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-    
-    rag_chain = (
-        { "context": retriever | format_docs, "question": RunnablePassthrough() }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+            # 문서 검색기 생성
+            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+            retriever = MultiQueryRetriever.from_llm(
+                llm=llm,
+                retriever=db.as_retriever(search_kwargs={"k": 3})
+            )
 
-    result = rag_chain.invoke("아내가 먹고 싶어하는 음식은 무엇인가요?")
-    print(result)
+            # 사용자 질의를 LLM에 전달해 답변 생성
+            client = Client()
+            prompt = client.pull_prompt("rlm/rag-prompt", dangerously_pull_public_prompt=True)
+
+            def format_docs(docs):
+                return "\n\n".join(doc.page_content for doc in docs)
+            
+            rag_chain = (
+                { "context": retriever | format_docs, "question": RunnablePassthrough() }
+                | prompt
+                | llm
+                | StrOutputParser()
+            )
+
+            # result = rag_chain.invoke("아내가 먹고 싶어하는 음식은 무엇인가요?")
+            # print(result)
+
+            result = rag_chain.invoke(question)
+            st.write(result)
